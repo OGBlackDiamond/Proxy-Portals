@@ -1,0 +1,6 @@
+name: ProxyPortals
+version: 1.0.0
+main: dev.ogblackdiamond.proxyportals.ProxyPortals 
+description: Interfaces with ProxyPortalsVelocity 
+author: BlackDiamond 
+api-version: '1.21'
