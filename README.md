@@ -8,5 +8,8 @@ This plugin works on the backend. No need for a proxy plugin. Simply place the j
 To register an ordinary into a server switching portal, use the command `/register-server *server*`, in which you replace `*server*` with the name of the server you want the portal to transport you to. The `*server*` parameter must be the exact same that it appears in your `velocity.toml` (you can find a list of available servers and their exact names with the `/server` command). You will be promped to walk into the portal you want to register. After you do so, the entire portal (size and shape doesn't matter) will be registered to redirect the player to that server.
 **Multiple portals can be registered to one server**!
 
+### NOTE:
+I highly highly recommend going into the `config.yml` and changing `lobby-mode` to `true` on any server that you configure portals on. This will prevent players from being locked out of a server because they spawn in a portal. It is `false` by default because this option sends everyone who joins the server to the server spawn when they join, no matter where the are in the world.
+
 ## Building
 I use gradle to build this plugin. Ensure you have Java 21 or older and run `./gradle` build on Linux & MacOS, or `.\gradle.bat` build on Windows. Given that the build succeeds, the jar will spawn under the `ProxyPortalsPaper/build/libs/` directory.

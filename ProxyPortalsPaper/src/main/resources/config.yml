@@ -1,4 +1,7 @@
 # when true, this will force all players who join the server to spawn at the world spawn of the world`:wa
 lobby-mode: false
 
+# don't touch this unless you're having issues and know what you're doing
+# this changes the rate at which the plugin will check whether a valid player
+# should teleport to a different server or not
 portal-tick-rate: 5
