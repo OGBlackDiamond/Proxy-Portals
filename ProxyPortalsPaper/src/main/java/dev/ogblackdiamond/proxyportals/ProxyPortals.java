@@ -1,6 +1,7 @@
 package dev.ogblackdiamond.proxyportals;
 
 import dev.ogblackdiamond.proxyportals.commands.Register;
+import dev.ogblackdiamond.proxyportals.database.DataBase;
 
 import java.util.ArrayList;
 
@@ -12,10 +13,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPortalEnterEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.mojang.brigadier.Command;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
@@ -25,18 +29,33 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 public class ProxyPortals extends JavaPlugin implements Listener {
 
 
+    DataBase dataBase;
+
     boolean isRegistering = false;
     
     String toRegister = null;
 
     Player registeringPlayer = null;
 
+    boolean lobbyMode;
+
+    int portalTick = 0;
+
+    int portalTickRate;
 
     @Override
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this);
 
-        getServer().getMessenger().registerOutgoingPluginChannel(this, "proxyportals:main");
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+
+        saveDefaultConfig(); 
+
+        lobbyMode = getConfig().getBoolean("lobby-mode");
+        portalTickRate = getConfig().getInt("portal-tick-rate");
+
+        dataBase = new DataBase();
+        dataBase.connect();
 
         LifecycleEventManager<Plugin> manager = this.getLifecycleManager();
         manager.registerEventHandler(LifecycleEvents.COMMANDS, event -> {
@@ -46,27 +65,61 @@ public class ProxyPortals extends JavaPlugin implements Listener {
                 "prepares to register a portal",
                 new Register(this)
             );
+
         });
 
     }
 
     @EventHandler
+    public void onPlayerConnect(PlayerJoinEvent event) {
+        if (lobbyMode) {
+            event.getPlayer().teleport(event.getPlayer().getWorld().getSpawnLocation());
+        }
+    }
+
+    @EventHandler
     public void onPlayerPortal(EntityPortalEnterEvent event) {
+
+        if (!(event.getEntity() instanceof Player)) return;
 
         if (isRegistering && registeringPlayer == event.getEntity()) {
             if (toRegister == null) return;
             // register the portal here
-            Bukkit.getLogger().info("registered portal " + toRegister);
             
             ArrayList<Location> portalBlocksList = new ArrayList<Location>();
 
             registerPortal(event.getLocation().getBlock(), portalBlocksList);
 
+            dataBase.registerServer(portalBlocksList, toRegister);
+           
+            // output success confirmation
             event.getEntity().sendMessage("Successfully registered server " + toRegister);
+            Bukkit.getLogger().info("registered portal " + toRegister);
 
             isRegistering = false;
             toRegister = null;
             registeringPlayer = null;
+            return;
+
+        } else {
+
+            portalTick++;
+
+            String server = dataBase.checkPortal(event.getLocation());
+
+            if (server != null) {
+                String playerName = event.getEntity().getName();
+                ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                out.writeUTF("Connect");
+                out.writeUTF(server);
+                Player player = Bukkit.getPlayer(playerName);
+                Location tpLocation = new Location(player.getWorld(), 0, 0, 0);
+                if (portalTick >= portalTickRate) portalTick = 0; else return;
+                player.teleport(tpLocation);
+                player.sendPluginMessage(this, "BungeeCord", out.toByteArray());
+            } else {
+                Bukkit.getLogger().warning("[proxyportals] Teleport event returned null!");
+            }
         }
 
     }

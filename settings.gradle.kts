@@ -11,4 +11,4 @@ plugins {
 }
 
 rootProject.name = "Proxy-Portals"
-include("ProxyPortalsVelocity", "ProxyPortalsPaper")
+include("ProxyPortalsPaper")

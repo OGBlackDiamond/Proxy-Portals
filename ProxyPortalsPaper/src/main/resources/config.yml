@@ -1,0 +1,4 @@
+# when true, this will force all players who join the server to spawn at the world spawn of the world`:wa
+lobby-mode: false
+
+portal-tick-rate: 5
