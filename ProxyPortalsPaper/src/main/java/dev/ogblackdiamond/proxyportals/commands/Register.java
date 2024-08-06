@@ -1,14 +1,18 @@
 package dev.ogblackdiamond.proxyportals.commands;
 
-import org.bukkit.Bukkit;
-import org.jetbrains.annotations.NotNull;
-
 import dev.ogblackdiamond.proxyportals.ProxyPortals;
+
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
+import org.jetbrains.annotations.NotNull;
+
+/**
+ *  Command class that handles the registration of portals.
+ */
 public class Register implements BasicCommand {
 
     private final Component success = Component.text()

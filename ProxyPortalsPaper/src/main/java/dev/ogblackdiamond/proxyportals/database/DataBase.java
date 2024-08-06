@@ -1,27 +1,31 @@
 package dev.ogblackdiamond.proxyportals.database;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
+/**
+ *  Class to manage all database interactions.
+ */
 public class DataBase {
 
     Connection connection;
 
+    /**
+     *  Big messy connection class.
+     *  Initializes the database and a connection instance, and creates an empty table if one doesn't exist.
+     *  Will yell if something fails.
+     */
     public void connect() {
         // ensure database is properly initialized
+        
+        // register the JDBC SQL driver
         try {
             Class.forName("org.sqlite.JDBC");
         } catch (ClassNotFoundException e) {
@@ -29,6 +33,8 @@ public class DataBase {
             Bukkit.getLogger().warning(e.toString());
             return;
         }
+
+        // setup a database connection
         try {
             connection = DriverManager
                     .getConnection("jdbc:sqlite:plugins/ProxyPortals/database.db");
@@ -38,6 +44,7 @@ public class DataBase {
             return;
         } 
 
+        // creates an empty table for the database to use if one is not already present
         try (Statement statement = connection.createStatement()) {
             String sqlStatement = "CREATE TABLE IF NOT EXISTS portals (x int, y int, z int, server varchar(255));";
             statement.executeUpdate(sqlStatement);
@@ -48,6 +55,10 @@ public class DataBase {
         }
     }
 
+    /**
+     *  Registers a new server into the database.
+     *  Iterates over all detected blocks and assigns them to a server.
+     */
     public void registerServer(ArrayList<Location> list, String server) {
         try (Statement statement = connection.createStatement()) {
             String sqlStatement = "";
@@ -67,6 +78,10 @@ public class DataBase {
     }
 
 
+    /**
+     *  Checks the entire database to see if a location has a registered portal block.
+     *  Returns the name of the server if it does, null if not.
+     */
     public String checkPortal(Location location) {
         try (Statement statement = connection.createStatement()) {
             String sqlStatement = "SELECT * FROM portals;";

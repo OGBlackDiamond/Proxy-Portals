@@ -1,7 +1,16 @@
 package dev.ogblackdiamond.proxyportals;
 
+
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+
 import dev.ogblackdiamond.proxyportals.commands.Register;
 import dev.ogblackdiamond.proxyportals.database.DataBase;
+
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+
 
 import java.util.ArrayList;
 
@@ -14,18 +23,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPortalEnterEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
-
-import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
-import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-
-
+/**
+ *  Main class for ProxyPortals.
+ */
 public class ProxyPortals extends JavaPlugin implements Listener {
 
 
@@ -45,18 +48,25 @@ public class ProxyPortals extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+
+        // register this plugin as an event listener
         Bukkit.getPluginManager().registerEvents(this, this);
 
+        // register this plugin as a message sender on the "BungeeCord" channel
         getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
 
+        // save config file
         saveDefaultConfig(); 
 
+        // set lobby and tick rate from config
         lobbyMode = getConfig().getBoolean("lobby-mode");
         portalTickRate = getConfig().getInt("portal-tick-rate");
 
+        // initialize the database
         dataBase = new DataBase();
         dataBase.connect();
 
+        // register the "register-portal" command
         LifecycleEventManager<Plugin> manager = this.getLifecycleManager();
         manager.registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             final Commands commands = event.registrar();
@@ -70,6 +80,9 @@ public class ProxyPortals extends JavaPlugin implements Listener {
 
     }
 
+    /**
+     *  Teleports the player back to spawn when they join so there isn't an infinite teleport loop.
+     */
     @EventHandler
     public void onPlayerConnect(PlayerJoinEvent event) {
         if (lobbyMode) {
@@ -77,15 +90,26 @@ public class ProxyPortals extends JavaPlugin implements Listener {
         }
     }
 
+    /**
+     *  Decides what to do when an entity enters a portal.
+     *  Possibilites:
+     *  - connect player to other server
+     *  - register new server
+     *  - do nothing
+     */
     @EventHandler
     public void onPlayerPortal(EntityPortalEnterEvent event) {
 
+        // ensures that a player is being detected
         if (!(event.getEntity() instanceof Player)) return;
 
+        // registers a new portal
         if (isRegistering && registeringPlayer == event.getEntity()) {
+            // null check
             if (toRegister == null) return;
+
             // register the portal here
-            
+        
             ArrayList<Location> portalBlocksList = new ArrayList<Location>();
 
             registerPortal(event.getLocation().getBlock(), portalBlocksList);
@@ -96,6 +120,7 @@ public class ProxyPortals extends JavaPlugin implements Listener {
             event.getEntity().sendMessage("Successfully registered server " + toRegister);
             Bukkit.getLogger().info("registered portal " + toRegister);
 
+            // return variables to defualts after registration
             isRegistering = false;
             toRegister = null;
             registeringPlayer = null;
@@ -108,28 +133,43 @@ public class ProxyPortals extends JavaPlugin implements Listener {
             String server = dataBase.checkPortal(event.getLocation());
 
             if (server != null) {
+                // get playername
                 String playerName = event.getEntity().getName();
+                
+                // initialize dataoutput
                 ByteArrayDataOutput out = ByteStreams.newDataOutput();
                 out.writeUTF("Connect");
                 out.writeUTF(server);
+
+                // gets the player in the portal and sets the teleport location
                 Player player = Bukkit.getPlayer(playerName);
                 Location tpLocation = new Location(player.getWorld(), 0, 0, 0);
+
+                // checks if the server is on a tick where it can safely send the player
                 if (portalTick >= portalTickRate) portalTick = 0; else return;
+
+                // teleports the player away to prevent repeat checks (and therefore errors)
                 player.teleport(tpLocation);
+                // sends the player to new server
                 player.sendPluginMessage(this, "BungeeCord", out.toByteArray());
-            } else {
-                Bukkit.getLogger().warning("[proxyportals] Teleport event returned null!");
             }
         }
-
     }
 
+    /**
+     *  Sets registering mode.
+     *  This is used by Register.java
+     */
     public void setRegistering(String server, Player player) {
         isRegistering = true;
         toRegister = server;
         registeringPlayer = player;
     }
 
+    /**
+     * Recursive algorighm to gather all Location objects of every portal block in a registered portal.
+     * This checks for portal blocks in layers.
+     */
     private void registerPortal(Block block, ArrayList<Location> list) {
 
         Material portalBlock = Material.NETHER_PORTAL;
@@ -138,8 +178,10 @@ public class ProxyPortals extends JavaPlugin implements Listener {
         if (block.getType() != portalBlock) return;
         for (Location loc : list) if (block.getLocation().equals(loc)) return;
         
+        // adds this block as a portal block
         list.add(block.getLocation());
 
+        // gets all nearby blocks in the x/z plane
         Block[] blocks = {
             block.getRelative(1, 0, 0),
             block.getRelative(-1, 0, 0),
@@ -147,6 +189,7 @@ public class ProxyPortals extends JavaPlugin implements Listener {
             block.getRelative(0, 0, -1)
         };
 
+        // iterate through nearby blocks and their adjacent blocks to find all nearby portal blocks
         for (Block tempBlock : blocks) {
             while (tempBlock.getType() == portalBlock) {
                 list.add(tempBlock.getLocation());
@@ -154,10 +197,9 @@ public class ProxyPortals extends JavaPlugin implements Listener {
             }
         }
         
-        
+        // recursivly check layers above and below current block
         registerPortal(block.getRelative(0, 1, 0), list);
         registerPortal(block.getRelative(0, -1, 0), list);
-            
     }
 }
 
