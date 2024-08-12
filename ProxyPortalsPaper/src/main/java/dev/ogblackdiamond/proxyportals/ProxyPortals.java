@@ -78,6 +78,8 @@ public class ProxyPortals extends JavaPlugin implements Listener {
 
         });
 
+        Bukkit.getLogger().info("[proxyporatls] Thank you for using ProxyPortals");
+
     }
 
     /**
@@ -143,7 +145,7 @@ public class ProxyPortals extends JavaPlugin implements Listener {
 
                 // gets the player in the portal and sets the teleport location
                 Player player = Bukkit.getPlayer(playerName);
-                Location tpLocation = new Location(player.getWorld(), 0, 0, 0);
+                Location tpLocation = player.getWorld().getSpawnLocation();
 
                 // checks if the server is on a tick where it can safely send the player
                 if (portalTick >= portalTickRate) portalTick = 0; else return;
