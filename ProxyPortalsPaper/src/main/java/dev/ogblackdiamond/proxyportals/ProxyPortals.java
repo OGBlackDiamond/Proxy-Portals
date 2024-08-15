@@ -78,7 +78,7 @@ public class ProxyPortals extends JavaPlugin implements Listener {
 
         });
 
-        Bukkit.getLogger().info("[proxyporatls] Thank you for using ProxyPortals");
+        Bukkit.getLogger().info("[ProxyPoratls] Thank you for using ProxyPortals");
 
     }
 
