@@ -11,7 +11,7 @@ To register an ordinary into a server switching portal, use the command `/regist
 To remove a registration from a portal without deleting your entire configuration, use the command `/deregister-server *server*` in which you replace `*server*` with the name of ther server you want to deregister. After running this command, all portals registered under `*server*` will return to regular portals. 
 
 #### Disclaimer:
-I use a recursive function to register the entirety of any server the player steps into. With very large portals, the registration will not be immediate, and the server will throw a thread dump. This is normal, the plugin will still work perfectly fine.
+I use a recursive function to register the entirety of any portal the player steps into. With very large portals, the registration will not be immediate, and the server will throw a thread dump. This is normal, the plugin will still work perfectly fine.
 
 ### NOTE:
 I highly highly recommend going into the `config.yml` and changing `lobby-mode` to `true` on any server that you configure portals on. This will prevent players from being locked out of a server because they spawn in a portal. It is `false` by default because this option sends everyone who joins the server to the server spawn when they join, no matter where the are in the world.
