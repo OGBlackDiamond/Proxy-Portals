@@ -77,6 +77,17 @@ public class DataBase {
         }
     }
 
+    public void deregisterServer(String server) {
+        try (Statement statement = connection.createStatement()) {
+            String sqlStatement = "DELETE FROM portals WHERE server='" + server + "'";
+            statement.executeUpdate(sqlStatement);
+        } catch (SQLException e) {
+            Bukkit.getLogger().warning("[proxymessages] Error deregistering server from the database!");
+            Bukkit.getLogger().warning(e.toString());
+            return;
+        }
+    }
+
 
     /**
      *  Checks the entire database to see if a location has a registered portal block.

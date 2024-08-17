@@ -4,6 +4,7 @@ package dev.ogblackdiamond.proxyportals;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
+import dev.ogblackdiamond.proxyportals.commands.DeRegister;
 import dev.ogblackdiamond.proxyportals.commands.Register;
 import dev.ogblackdiamond.proxyportals.database.DataBase;
 
@@ -25,6 +26,8 @@ import org.bukkit.event.entity.EntityPortalEnterEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 /**
  *  Main class for ProxyPortals.
@@ -41,6 +44,7 @@ public class ProxyPortals extends JavaPlugin implements Listener {
     Player registeringPlayer = null;
 
     boolean lobbyMode;
+    boolean noPlayerDie; 
 
     int portalTick = 0;
 
@@ -60,6 +64,7 @@ public class ProxyPortals extends JavaPlugin implements Listener {
 
         // set lobby and tick rate from config
         lobbyMode = getConfig().getBoolean("lobby-mode");
+        noPlayerDie = getConfig().getBoolean("no-player-die");
         portalTickRate = getConfig().getInt("portal-tick-rate");
 
         // initialize the database
@@ -78,7 +83,20 @@ public class ProxyPortals extends JavaPlugin implements Listener {
 
         });
 
-        Bukkit.getLogger().info("[ProxyPoratls] Thank you for using ProxyPortals");
+        // register the "deregister-portal" command
+        manager.registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            final Commands commands = event.registrar();
+            commands.register(
+                "deregister-portal",
+                "deregisters a portal",
+                new DeRegister(dataBase)
+            );
+
+        });
+
+
+
+        Bukkit.getLogger().info("[ProxyPortals] Thank you for using ProxyPortals");
 
     }
 
@@ -89,6 +107,12 @@ public class ProxyPortals extends JavaPlugin implements Listener {
     public void onPlayerConnect(PlayerJoinEvent event) {
         if (lobbyMode) {
             event.getPlayer().teleport(event.getPlayer().getWorld().getSpawnLocation());
+        }
+
+        if (noPlayerDie) {
+            event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, PotionEffect.INFINITE_DURATION, 255, false, false, false));
+            event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, PotionEffect.INFINITE_DURATION, 255, false, false, false));
+            event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.INSTANT_HEALTH, PotionEffect.INFINITE_DURATION, 255, false, false, false));
         }
     }
 
