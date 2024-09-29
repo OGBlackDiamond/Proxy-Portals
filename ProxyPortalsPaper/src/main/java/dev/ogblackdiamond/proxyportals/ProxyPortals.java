@@ -14,6 +14,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -29,12 +30,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+
 /**
  *  Main class for ProxyPortals.
  */
 public class ProxyPortals extends JavaPlugin implements Listener {
 
-
+    private static final Logger LOGGER = Logger.getLogger("ProxyPortals");
     DataBase dataBase;
 
     boolean isRegistering = false;
@@ -57,8 +59,8 @@ public class ProxyPortals extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(this, this);
 
         // register this plugin as a message sender on the "BungeeCord" channel
-        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-
+        this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+        this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", this);
         // save config file
         saveDefaultConfig(); 
 
@@ -76,7 +78,7 @@ public class ProxyPortals extends JavaPlugin implements Listener {
         manager.registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             final Commands commands = event.registrar();
             commands.register(
-                "register-portal",
+                "register-server",
                 "prepares to register a portal",
                 new Register(this)
             );
@@ -87,7 +89,7 @@ public class ProxyPortals extends JavaPlugin implements Listener {
         manager.registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             final Commands commands = event.registrar();
             commands.register(
-                "deregister-portal",
+                "deregister-server",
                 "deregisters a portal",
                 new DeRegister(dataBase)
             );
@@ -176,7 +178,11 @@ public class ProxyPortals extends JavaPlugin implements Listener {
 
                 // teleports the player away to prevent repeat checks (and therefore errors)
                 player.teleport(tpLocation);
-                // sends the player to new server
+
+                //logging message sent to Velociy / BungeeCord for troubleshooting
+                LOGGER.info("Sending plugin message to BungeeCord: Connect to " + server);
+
+                //sends player to new server
                 player.sendPluginMessage(this, "BungeeCord", out.toByteArray());
             }
         }
