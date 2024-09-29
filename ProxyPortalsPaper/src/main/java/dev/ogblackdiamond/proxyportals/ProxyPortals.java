@@ -60,7 +60,6 @@ public class ProxyPortals extends JavaPlugin implements Listener {
 
         // register this plugin as a message sender on the "BungeeCord" channel
         this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-        this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", this);
         // save config file
         saveDefaultConfig(); 
 
