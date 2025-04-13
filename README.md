@@ -1,6 +1,8 @@
 # Proxy-Portals
 A minecraft proxy plugin that allows players to transport between servers with nether portals.
 
+Join [my Discord!](https://discord.gg/C2PJNTN97u)
+
 ## Installation
 This plugin works on the backend. No need for a proxy plugin. Simply place the jar file in the plugins folder of any server you want to use portals in, and restart your server. (Note, this plugin does not need to be on the server the player is teleporting to! If you have one central lobby server that has all of the portals, that is the only server that needs the plugin.)
 
